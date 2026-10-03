@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>🐍 Neon Snake</title>
+
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#8a2be2">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+
+
+    <style>
+
+        /* ==================================================
+           RÉGLAGES GÉNÉRAUX
+           ================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            min-height: 100vh;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            background:
+                radial-gradient(
+                    circle at center,
+                    #241044 0%,
+                    #120820 45%,
+                    #08030d 100%
+                );
+
+            font-family: Arial, sans-serif;
+
+            color: white;
+
+        }
+
+
+        /* ==================================================
+           CONTENEUR PRINCIPAL
+           ================================================== */
+
+        .jeu {
+
+            text-align: center;
+
+            width: 100%;
+
+            max-width: 600px;
+
+            padding: 20px;
+
+        }
+
+
+        /* ==================================================
+           TITRE
+           ================================================== */
+
+        h1 {
+
+            margin: 0 0 20px 0;
+
+            font-size: 42px;
+
+            letter-spacing: 3px;
+
+            color: #e879ff;
+
+            text-shadow:
+                0 0 5px #e879ff,
+                0 0 15px #e879ff,
+                0 0 30px #a020f0;
+
+        }
+
+
+        /* ==================================================
+           INFORMATIONS
+           ================================================== */
+
+        .infos {
+
+            display: flex;
+
+            justify-content: center;
+
+            gap: 15px;
+
+            margin-bottom: 20px;
+
+            flex-wrap: wrap;
+
+        }
+
+
+        .info {
+
+            min-width: 130px;
+
+            padding: 10px 15px;
+
+            background: rgba(255, 255, 255, 0.05);
+
+            border: 1px solid rgba(224, 64, 251, 0.4);
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 0 10px rgba(224, 64, 251, 0.15);
+
+            backdrop-filter: blur(5px);
+
+        }
+
+
+        /* ==================================================
+           TERRAIN
+           ================================================== */
+
+        #terrain {
+
+            width: 400px;
+
+            height: 400px;
+
+            max-width: 90vw;
+
+            max-height: 90vw;
+
+            margin: auto;
+
+            position: relative;
+
+            display: grid;
+
+            grid-template-columns: repeat(20, 1fr);
+
+            grid-template-rows: repeat(20, 1fr);
+
+            background-color: #08050d;
+
+            border: 3px solid #9c27b0;
+
+            border-radius: 12px;
+
+            overflow: hidden;
+
+            box-shadow:
+
+                0 0 10px #9c27b0,
+
+                0 0 30px rgba(156, 39, 176, 0.5),
+
+                inset 0 0 30px rgba(156, 39, 176, 0.2);
+
+            /* Important pour le swipe */
+
+            touch-action: none;
+
+        }
+
+
+        /* ==================================================
+           GRILLE DU TERRAIN
+           ================================================== */
+
+        #terrain::before {
+
+            content: "";
+
+            position: absolute;
+
+            inset: 0;
+
+            pointer-events: none;
+
+            background-image:
+
+                linear-gradient(
+                    rgba(224, 64, 251, 0.08) 1px,
+                    transparent 1px
+                ),
+
+                linear-gradient(
+                    90deg,
+                    rgba(224, 64, 251, 0.08) 1px,
+                    transparent 1px
+                );
+
+            background-size: 5% 5%;
+
+        }
+
+
+        /* ==================================================
+           SERPENT
+           ================================================== */
+
+        .serpent {
+
+            position: relative;
+
+            z-index: 2;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #7b1fa2,
+                    #e040fb
+                );
+
+            border: 1px solid #f3b4ff;
+
+            border-radius: 4px;
+
+            box-shadow:
+
+                0 0 5px #e040fb,
+
+                0 0 10px #e040fb,
+
+                0 0 15px rgba(224, 64, 251, 0.8);
+
+        }
+
+
+        /* ==================================================
+           TÊTE
+           ================================================== */
+
+        .tete {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #00e5ff,
+                    #00a8ff
+                );
+
+            border: 1px solid #a7f7ff;
+
+            box-shadow:
+
+                0 0 5px #00e5ff,
+
+                0 0 12px #00e5ff,
+
+                0 0 20px rgba(0, 229, 255, 0.8);
+
+            border-radius: 6px;
+
+        }
+
+
+        /* ==================================================
+           YEUX
+           ================================================== */
+
+        .oeil {
+
+            position: absolute;
+
+            width: 4px;
+
+            height: 4px;
+
+            background-color: white;
+
+            border-radius: 50%;
+
+            box-shadow:
+                0 0 4px white;
+
+        }
+
+
+        .oeil1 {
+
+            top: 2px;
+
+            right: 3px;
+
+        }
+
+
+        .oeil2 {
+
+            bottom: 2px;
+
+            right: 3px;
+
+        }
+
+
+        /* ==================================================
+           POMME
+           ================================================== */
+
+        .pomme {
+
+            position: relative;
+
+            z-index: 3;
+
+            background:
+                radial-gradient(
+                    circle at 30% 30%,
+                    #ff5252,
+                    #ff1744 60%,
+                    #b00020
+                );
+
+            border-radius: 50%;
+
+            border: 1px solid #ff8a9a;
+
+            box-shadow:
+
+                0 0 5px #ff1744,
+
+                0 0 12px #ff1744,
+
+                0 0 20px rgba(255, 23, 68, 0.7);
+
+            animation:
+                pulsePomme 1s infinite alternate;
+
+        }
+
+
+        @keyframes pulsePomme {
+
+            from {
+
+                transform: scale(0.85);
+
+            }
+
+            to {
+
+                transform: scale(1);
+
+            }
+
+        }
+
+
+        /* ==================================================
+           ÉCRANS
+           ================================================== */
+
+        .message {
+
+            position: absolute;
+
+            top: 0;
+
+            left: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+            align-items: center;
+
+            text-align: center;
+
+            background:
+                radial-gradient(
+                    circle,
+                    rgba(36, 16, 68, 0.95),
+                    rgba(8, 3, 13, 0.97)
+                );
+
+            z-index: 20;
+
+            padding: 20px;
+
+        }
+
+
+        .message h2 {
+
+            margin: 0 0 15px 0;
+
+            font-size: 34px;
+
+            color: #e879ff;
+
+            text-shadow:
+
+                0 0 5px #e879ff,
+
+                0 0 15px #e879ff;
+
+        }
+
+
+        .message p {
+
+            margin: 5px;
+
+            font-size: 16px;
+
+            color: #ddd;
+
+        }
+
+
+        /* ==================================================
+           BOUTONS CLASSIQUES
+           ================================================== */
+
+        button {
+
+            border: none;
+
+            color: white;
+
+            font-size: 17px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            -webkit-tap-highlight-color: transparent;
+
+            user-select: none;
+
+        }
+
+
+        .boutonJeu {
+
+            margin-top: 20px;
+
+            padding: 12px 28px;
+
+            border: 2px solid #e040fb;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #7b1fa2,
+                    #e040fb
+                );
+
+            box-shadow:
+
+                0 0 8px #e040fb,
+
+                0 0 18px rgba(224, 64, 251, 0.5);
+
+            transition: 0.2s;
+
+        }
+
+
+        .boutonJeu:hover {
+
+            transform: scale(1.08);
+
+            box-shadow:
+
+                0 0 12px #e040fb,
+
+                0 0 25px #e040fb;
+
+        }
+
+
+        .boutonJeu:active {
+
+            transform: scale(0.95);
+
+        }
+
+
+        /* ==================================================
+           CONTRÔLES TACTILES
+           ================================================== */
+
+        #controles {
+
+            width: 220px;
+
+            margin: 20px auto 0;
+
+            display: grid;
+
+            grid-template-columns: repeat(3, 1fr);
+
+            grid-template-rows: repeat(2, 60px);
+
+            gap: 8px;
+
+            touch-action: manipulation;
+
+        }
+
+
+        .boutonDirection {
+
+            width: 100%;
+
+            height: 100%;
+
+            border-radius: 12px;
+
+            border: 2px solid #9c27b0;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #241044,
+                    #52156b
+                );
+
+            box-shadow:
+
+                0 0 8px rgba(156, 39, 176, 0.6),
+
+                inset 0 0 10px rgba(224, 64, 251, 0.15);
+
+            font-size: 26px;
+
+            transition: 0.1s;
+
+        }
+
+
+        .boutonDirection:hover {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #52156b,
+                    #7b1fa2
+                );
+
+        }
+
+
+        .boutonDirection:active {
+
+            transform: scale(0.90);
+
+            background: #7b1fa2;
+
+            box-shadow:
+
+                0 0 15px #e040fb;
+
+        }
+
+
+        /*
+
+        Placement des quatre boutons :
+
+              HAUT
+
+        GAUCHE BAS DROITE
+
+        */
+
+
+        #haut {
+
+            grid-column: 2;
+
+            grid-row: 1;
+
+        }
+
+
+        #gauche {
+
+            grid-column: 1;
+
+            grid-row: 2;
+
+        }
+
+
+        #bas {
+
+            grid-column: 2;
+
+            grid-row: 2;
+
+        }
+
+
+        #droite {
+
+            grid-column: 3;
+
+            grid-row: 2;
+
+        }
+
+
+        /* ==================================================
+           SCORE FINAL
+           ================================================== */
+
+        #scoreFinal {
+
+            font-size: 20px;
+
+            color: #00e5ff;
+
+            text-shadow:
+                0 0 8px #00e5ff;
+
+        }
+
+
+        /* ==================================================
+           MOBILE
+           ================================================== */
+
+        @media (max-width: 500px) {
+
+            body {
+
+                align-items: flex-start;
+
+                padding-top: 15px;
+
+                overflow-y: auto;
+
+            }
+
+
+            .jeu {
+
+                padding: 10px;
+
+            }
+
+
+            h1 {
+
+                font-size: 30px;
+
+                margin-bottom: 12px;
+
+            }
+
+
+            .infos {
+
+                gap: 6px;
+
+                margin-bottom: 12px;
+
+            }
+
+
+            .info {
+
+                min-width: auto;
+
+                padding: 8px 10px;
+
+                font-size: 13px;
+
+            }
+
+
+            #terrain {
+
+                width: 90vw;
+
+                height: 90vw;
+
+            }
+
+
+            #controles {
+
+                width: 210px;
+
+                grid-template-rows: repeat(2, 55px);
+
+                margin-top: 15px;
+
+            }
+
+
+            .boutonDirection {
+
+                font-size: 24px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <div class="jeu">
+
+
+        <!-- ==================================================
+             TITRE
+             ================================================== -->
+
+        <h1>
+
+            🐍 NEON SNAKE
+
+        </h1>
+
+
+
+        <!-- ==================================================
+             INFORMATIONS
+             ================================================== -->
+
+        <div class="infos">
+
+
+            <div class="info" id="score">
+
+                🍎 Score : 0
+
+            </div>
+
+
+            <div class="info" id="meilleurScore">
+
+                🏆 Record : 0
+
+            </div>
+
+
+            <div class="info" id="niveau">
+
+                ⚡ Niveau : 1
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- ==================================================
+             TERRAIN
+             ================================================== -->
+
+        <div id="terrain">
+
+
+            <!-- ÉCRAN DE DÉPART -->
+
+            <div id="ecranDepart" class="message">
+
+
+                <h2>
+
+                    🐍 NEON SNAKE
+
+                </h2>
+
+
+                <p>
+
+                    Mange les pommes 🍎
+
+                </p>
+
+
+                <p>
+
+                    Évite les murs et ton propre corps !
+
+                </p>
+
+
+                <p>
+
+                    ⌨️ PC : utilise les flèches
+
+                </p>
+
+
+                <p>
+
+                    📱 Téléphone : glisse ton doigt
+
+                </p>
+
+
+                <button
+                    class="boutonJeu"
+                    onclick="demarrerJeu()"
+                >
+
+                    ▶️ COMMENCER
+
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- ==================================================
+             GAME OVER
+             ================================================== -->
+
+        <div
+            id="ecranGameOver"
+            class="message"
+            style="display: none;"
+        >
+
+
+            <h2>
+
+                💀 GAME OVER
+
+            </h2>
+
+
+            <p id="scoreFinal">
+
+                Score : 0
+
+            </p>
+
+
+            <button
+                class="boutonJeu"
+                onclick="demarrerJeu()"
+            >
+
+                🔄 REJOUER
+
+            </button>
+
+
+        </div>
+
+
+
+        <!-- ==================================================
+             CONTRÔLES TACTILES
+             ================================================== -->
+
+        <div id="controles">
+
+
+            <button
+                id="haut"
+                class="boutonDirection"
+                onclick="changerDirection('haut')"
+            >
+
+                ⬆️
+
+            </button>
+
+
+            <button
+                id="gauche"
+                class="boutonDirection"
+                onclick="changerDirection('gauche')"
+            >
+
+                ⬅️
+
+            </button>
+
+
+            <button
+                id="bas"
+                class="boutonDirection"
+                onclick="changerDirection('bas')"
+            >
+
+                ⬇️
+
+            </button>
+
+
+            <button
+                id="droite"
+                class="boutonDirection"
+                onclick="changerDirection('droite')"
+            >
+
+                ➡️
+
+            </button>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <script>
+
+
+        /* ==================================================
+           1. RÉCUPÉRER LES ÉLÉMENTS HTML
+           ================================================== */
+
+
+        const terrain =
+            document.getElementById("terrain");
+
+
+        const scoreElement =
+            document.getElementById("score");
+
+
+        const meilleurScoreElement =
+            document.getElementById("meilleurScore");
+
+
+        const niveauElement =
+            document.getElementById("niveau");
+
+
+        const ecranDepart =
+            document.getElementById("ecranDepart");
+
+
+        const ecranGameOver =
+            document.getElementById("ecranGameOver");
+
+
+        const scoreFinal =
+            document.getElementById("scoreFinal");
+
+
+
+        /* ==================================================
+           2. VARIABLES DU JEU
+           ================================================== */
+
+
+        let serpent = [
+
+            { x: 10, y: 10 },
+
+            { x: 9, y: 10 },
+
+            { x: 8, y: 10 }
+
+        ];
+
+
+        let pomme = {
+
+            x: 15,
+
+            y: 10
+
+        };
+
+
+        let score = 0;
+
+
+        let meilleurScore =
+            localStorage.getItem("meilleurScoreSnake") || 0;
+
+
+        let niveau = 1;
+
+
+        let direction = "droite";
+
+
+        let jeuEnCours = false;
+
+
+        let intervalle;
+
+
+        let vitesse = 200;
+
+
+
+        /* ==================================================
+           3. VARIABLES POUR LE SWIPE
+           ================================================== */
+
+
+        let debutX = 0;
+
+        let debutY = 0;
+
+
+
+        /* ==================================================
+           4. AFFICHER LE RECORD
+           ================================================== */
+
+
+        meilleurScoreElement.textContent =
+            "🏆 Record : " + meilleurScore;
+
+
+
+        /* ==================================================
+           5. AFFICHER LE JEU
+           ================================================== */
+
+
+        function afficherJeu() {
+
+
+            const anciensBlocs =
+                terrain.querySelectorAll(
+                    ".serpent, .pomme"
+                );
+
+
+            anciensBlocs.forEach(function(bloc) {
+
+                bloc.remove();
+
+            });
+
+
+
+            /* ==================================================
+               AFFICHER LE SERPENT
+               ================================================== */
+
+
+            serpent.forEach(function(partie, index) {
+
+
+                const bloc =
+                    document.createElement("div");
+
+
+                bloc.classList.add("serpent");
+
+
+                /*
+
+                Le premier élément
+                est la tête.
+
+                */
+
+
+                if (index === 0) {
+
+
+                    bloc.classList.add("tete");
+
+
+                    /* =========================
+                       YEUX
+                       ========================= */
+
+
+                    const oeil1 =
+                        document.createElement("div");
+
+
+                    oeil1.classList.add(
+                        "oeil",
+                        "oeil1"
+                    );
+
+
+                    const oeil2 =
+                        document.createElement("div");
+
+
+                    oeil2.classList.add(
+                        "oeil",
+                        "oeil2"
+                    );
+
+
+                    bloc.appendChild(oeil1);
+
+                    bloc.appendChild(oeil2);
+
+                }
+
+
+                bloc.style.gridColumn =
+                    partie.x;
+
+
+                bloc.style.gridRow =
+                    partie.y;
+
+
+                terrain.appendChild(bloc);
+
+            });
+
+
+
+            /* ==================================================
+               AFFICHER LA POMME
+               ================================================== */
+
+
+            const blocPomme =
+                document.createElement("div");
+
+
+            blocPomme.classList.add("pomme");
+
+
+            blocPomme.style.gridColumn =
+                pomme.x;
+
+
+            blocPomme.style.gridRow =
+                pomme.y;
+
+
+            terrain.appendChild(blocPomme);
+
+        }
+
+
+
+        /* ==================================================
+           6. CRÉER UNE NOUVELLE POMME
+           ================================================== */
+
+
+        function nouvellePomme() {
+
+
+            let positionValide = false;
+
+
+            while (!positionValide) {
+
+
+                pomme = {
+
+                    x:
+                        Math.floor(
+                            Math.random() * 20
+                        ) + 1,
+
+                    y:
+                        Math.floor(
+                            Math.random() * 20
+                        ) + 1
+
+                };
+
+
+                positionValide = true;
+
+
+                serpent.forEach(function(partie) {
+
+
+                    if (
+
+                        partie.x === pomme.x &&
+
+                        partie.y === pomme.y
+
+                    ) {
+
+                        positionValide = false;
+
+                    }
+
+                });
+
+            }
+
+        }
+
+
+
+        /* ==================================================
+           7. VÉRIFIER LES COLLISIONS
+           ================================================== */
+
+
+        function verifierCollision(tete) {
+
+
+            /* =========================
+               MUR
+               ========================= */
+
+
+            if (
+
+                tete.x < 1 ||
+
+                tete.x > 20 ||
+
+                tete.y < 1 ||
+
+                tete.y > 20
+
+            ) {
+
+                return true;
+
+            }
+
+
+
+            /* =========================
+               CORPS
+               ========================= */
+
+
+            for (
+
+                let i = 0;
+
+                i < serpent.length;
+
+                i++
+
+            ) {
+
+
+                if (
+
+                    tete.x === serpent[i].x &&
+
+                    tete.y === serpent[i].y
+
+                ) {
+
+                    return true;
+
+                }
+
+            }
+
+
+            return false;
+
+        }
+
+
+
+        /* ==================================================
+           8. BOUGER LE SERPENT
+           ================================================== */
+
+
+        function bougerSerpent() {
+
+
+            const tete = serpent[0];
+
+
+            let nouvelleTete = {
+
+                x: tete.x,
+
+                y: tete.y
+
+            };
+
+
+
+            /* =========================
+               DIRECTION
+               ========================= */
+
+
+            if (direction === "droite") {
+
+                nouvelleTete.x++;
+
+            }
+
+
+            if (direction === "gauche") {
+
+                nouvelleTete.x--;
+
+            }
+
+
+            if (direction === "haut") {
+
+                nouvelleTete.y--;
+
+            }
+
+
+            if (direction === "bas") {
+
+                nouvelleTete.y++;
+
+            }
+
+
+
+            /* =========================
+               COLLISION
+               ========================= */
+
+
+            if (
+                verifierCollision(nouvelleTete)
+            ) {
+
+                terminerJeu();
+
+                return;
+
+            }
+
+
+
+            /* =========================
+               AJOUTER LA TÊTE
+               ========================= */
+
+
+            serpent.unshift(nouvelleTete);
+
+
+
+            /* =========================
+               MANGER LA POMME
+               ========================= */
+
+
+            if (
+
+                nouvelleTete.x === pomme.x &&
+
+                nouvelleTete.y === pomme.y
+
+            ) {
+
+
+                score++;
+
+
+                scoreElement.textContent =
+                    "🍎 Score : " + score;
+
+
+
+                /* =========================
+                   NIVEAU
+                   ========================= */
+
+
+                niveau =
+                    Math.floor(score / 5) + 1;
+
+
+                niveauElement.textContent =
+                    "⚡ Niveau : " + niveau;
+
+
+
+                /* =========================
+                   NOUVELLE POMME
+                   ========================= */
+
+
+                nouvellePomme();
+
+
+
+                /* =========================
+                   ACCÉLÉRATION
+                   ========================= */
+
+
+                if (score % 5 === 0) {
+
+                    augmenterVitesse();
+
+                }
+
+            }
+
+            else {
+
+                serpent.pop();
+
+            }
+
+
+
+            afficherJeu();
+
+        }
+
+
+
+        /* ==================================================
+           9. CHANGER LA DIRECTION
+           ================================================== */
+
+        function changerDirection(nouvelleDirection) {
+
+
+            /*
+
+            On empêche le serpent
+            de faire demi-tour.
+
+            */
+
+
+            if (
+
+                nouvelleDirection === "haut" &&
+
+                direction !== "bas"
+
+            ) {
+
+                direction = "haut";
+
+            }
+
+
+            if (
+
+                nouvelleDirection === "bas" &&
+
+                direction !== "haut"
+
+            ) {
+
+                direction = "bas";
+
+            }
+
+
+            if (
+
+                nouvelleDirection === "gauche" &&
+
+                direction !== "droite"
+
+            ) {
+
+                direction = "gauche";
+
+            }
+
+
+            if (
+
+                nouvelleDirection === "droite" &&
+
+                direction !== "gauche"
+
+            ) {
+
+                direction = "droite";
+
+            }
+
+        }
+
+
+
+        /* ==================================================
+           10. AUGMENTER LA VITESSE
+           ================================================== */
+
+
+        function augmenterVitesse() {
+
+
+            vitesse -= 20;
+
+
+            if (vitesse < 70) {
+
+                vitesse = 70;
+
+            }
+
+
+            clearInterval(intervalle);
+
+
+            intervalle =
+                setInterval(
+                    bougerSerpent,
+                    vitesse
+                );
+
+        }
+
+
+
+        /* ==================================================
+           11. GAME OVER
+           ================================================== */
+
+
+        function terminerJeu() {
+
+
+            jeuEnCours = false;
+
+
+            clearInterval(intervalle);
+
+
+
+            /* =========================
+               NOUVEAU RECORD
+               ========================= */
+
+
+            if (score > meilleurScore) {
+
+
+                meilleurScore = score;
+
+
+                localStorage.setItem(
+
+                    "meilleurScoreSnake",
+
+                    meilleurScore
+
+                );
+
+
+                meilleurScoreElement.textContent =
+
+                    "🏆 Record : " + meilleurScore;
+
+            }
+
+
+
+            /* =========================
+               SCORE FINAL
+               ========================= */
+
+
+            scoreFinal.textContent =
+
+                "Score : " + score;
+
+
+
+            /* =========================
+               AFFICHER GAME OVER
+               ========================= */
+
+
+            ecranGameOver.style.display =
+                "flex";
+
+        }
+
+
+
+        /* ==================================================
+           12. CLAVIER
+           ================================================== */
+
+
+        document.addEventListener(
+
+            "keydown",
+
+            function(event) {
+
+
+                if (event.key === "ArrowUp") {
+
+                    changerDirection("haut");
+
+                }
+
+
+                if (event.key === "ArrowDown") {
+
+                    changerDirection("bas");
+
+                }
+
+
+                if (event.key === "ArrowLeft") {
+
+                    changerDirection("gauche");
+
+                }
+
+
+                if (event.key === "ArrowRight") {
+
+                    changerDirection("droite");
+
+                }
+
+            }
+
+        );
+
+
+
+        /* ==================================================
+           13. SWIPE : DÉBUT DU DOIGT
+           ================================================== */
+
+
+        terrain.addEventListener(
+
+            "touchstart",
+
+            function(event) {
+
+
+                /*
+
+                On récupère la position
+                où le doigt commence.
+
+                */
+
+
+                debutX =
+                    event.touches[0].clientX;
+
+
+                debutY =
+                    event.touches[0].clientY;
+
+            },
+
+            { passive: true }
+
+        );
+
+
+
+        /* ==================================================
+           14. SWIPE : FIN DU DOIGT
+           ================================================== */
+
+
+        terrain.addEventListener(
+
+            "touchend",
+
+            function(event) {
+
+
+                /*
+
+                Position où le doigt termine.
+
+                */
+
+
+                const finX =
+                    event.changedTouches[0].clientX;
+
+
+                const finY =
+                    event.changedTouches[0].clientY;
+
+
+
+                /*
+
+                Calcul de la distance
+                parcourue par le doigt.
+
+                */
+
+
+                const differenceX =
+                    finX - debutX;
+
+
+                const differenceY =
+                    finY - debutY;
+
+
+
+                /*
+
+                On regarde si le mouvement
+                est suffisamment grand.
+
+                */
+
+
+                const distanceMinimum = 30;
+
+
+
+                if (
+
+                    Math.abs(differenceX) <
+                    distanceMinimum &&
+
+                    Math.abs(differenceY) <
+                    distanceMinimum
+
+                ) {
+
+                    return;
+
+                }
+
+
+
+                /* ==================================================
+                   MOUVEMENT HORIZONTAL
+                   ================================================== */
+
+
+                if (
+
+                    Math.abs(differenceX) >
+                    Math.abs(differenceY)
+
+                ) {
+
+
+                    if (differenceX > 0) {
+
+                        changerDirection("droite");
+
+                    }
+
+                    else {
+
+                        changerDirection("gauche");
+
+                    }
+
+                }
+
+
+
+                /* ==================================================
+                   MOUVEMENT VERTICAL
+                   ================================================== */
+
+
+                else {
+
+
+                    if (differenceY > 0) {
+
+                        changerDirection("bas");
+
+                    }
+
+                    else {
+
+                        changerDirection("haut");
+
+                    }
+
+                }
+
+            },
+
+            { passive: true }
+
+        );
+
+
+
+        /* ==================================================
+           15. DÉMARRER / REJOUER
+           ================================================== */
+
+
+        function demarrerJeu() {
+
+
+            clearInterval(intervalle);
+
+
+
+            /* =========================
+               SERPENT INITIAL
+               ========================= */
+
+
+            serpent = [
+
+                { x: 10, y: 10 },
+
+                { x: 9, y: 10 },
+
+                { x: 8, y: 10 }
+
+            ];
+
+
+
+            /* =========================
+               RÉINITIALISATION
+               ========================= */
+
+
+            score = 0;
+
+
+            niveau = 1;
+
+
+            vitesse = 200;
+
+
+            direction = "droite";
+
+
+            jeuEnCours = true;
+
+
+
+            /* =========================
+               AFFICHAGE
+               ========================= */
+
+
+            scoreElement.textContent =
+                "🍎 Score : 0";
+
+
+            niveauElement.textContent =
+                "⚡ Niveau : 1";
+
+
+
+            /* =========================
+               CACHER LES ÉCRANS
+               ========================= */
+
+
+            ecranDepart.style.display =
+                "none";
+
+
+            ecranGameOver.style.display =
+                "none";
+
+
+
+            /* =========================
+               NOUVELLE POMME
+               ========================= */
+
+
+            nouvellePomme();
+
+
+
+            /* =========================
+               AFFICHER
+               ========================= */
+
+
+            afficherJeu();
+
+
+
+            /* =========================
+               LANCER LE JEU
+               ========================= */
+
+
+            intervalle =
+
+                setInterval(
+
+                    bougerSerpent,
+
+                    vitesse
+
+                );
+
+        }
+
+
+
+        /* ==================================================
+           16. AFFICHAGE INITIAL
+           ================================================== */
+
+
+        afficherJeu();
+
+
+        /* ==================================================
+           17. SERVICE WORKER / MODE APPLICATION
+           ================================================== */
+
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", function() {
+                navigator.serviceWorker.register("./sw.js")
+                    .catch(function(erreur) {
+                        console.log("Service Worker non disponible :", erreur);
+                    });
+            });
+        }
+
+    </script>
+
+
+</body>
+
+</html>
